@@ -45,7 +45,7 @@ export class GameApplicationService implements GameUseCase {
     
     // Generate session token
     const sessionToken = this.tokenService.generateSessionToken(
-      { userId, action: 'game', startTime },
+      userId,
       GameApplicationService.SESSION_EXPIRY
     );
 

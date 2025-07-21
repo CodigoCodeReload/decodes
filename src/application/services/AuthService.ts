@@ -32,7 +32,7 @@ export class AuthService implements AuthUseCase {
     await this.userRepository.save(user);
 
     // Generate token
-    const token = this.tokenService.generateToken({ userId, username });
+    const token = this.tokenService.generateToken(userId, username);
 
     return { userId, token };
   }
@@ -50,7 +50,7 @@ export class AuthService implements AuthUseCase {
     }
 
     // Generate token
-    const token = this.tokenService.generateToken({ userId: user.id, username: user.username });
+    const token = this.tokenService.generateToken(user.id, user.username);
 
     return { userId: user.id, token };
   }

@@ -1,4 +1,4 @@
-import { ValidationError } from './ErrorHandler';
+import { ValidationError } from './ErrorTypes';
 
 /**
  * ValidationService

@@ -1,5 +1,5 @@
 import { results } from '../game/game.service';
-import { users } from '../auth/auth.controller';
+import { userModel } from '../auth/auth.controller';
 
 /**
  * Leaderboard entry interface matching the required format
@@ -31,8 +31,8 @@ export function getLeaderboard(): LeaderboardEntry[] {
       userResults.deviations.reduce((sum, dev) => sum + dev, 0) / totalGames
     );
     
-    // Get username from users map
-    const user = users.get(userId);
+    // Get username from userModel
+    const user = userModel.findById(userId);
     const username = user ? user.username : 'Unknown';
     
     leaderboard.push({

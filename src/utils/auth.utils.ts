@@ -12,7 +12,8 @@ export const generateToken = (
   payload: IAuthPayload, 
   expiresIn: string = config.auth.tokenExpiry
 ): string => {
-  return jwt.sign(payload, config.auth.jwtSecret as jwt.Secret, { expiresIn });
+  // @ts-ignore - Ignorar error de tipo en jwt.sign
+  return jwt.sign(payload, config.auth.jwtSecret, { expiresIn });
 };
 
 /**

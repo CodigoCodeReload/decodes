@@ -40,7 +40,7 @@ export class AuthMiddleware {
       
       // Add user info to request object for use in controllers
       req.user = {
-        id: payload.sub,
+        userId: payload.sub,
         username: payload.username
       };
       
@@ -69,7 +69,7 @@ export class AuthMiddleware {
       return;
     }
 
-    if (user.id !== userId) {
+    if (user.userId !== userId) {
       next(new AuthorizationError('Not authorized to access this resource'));
       return;
     }
@@ -79,13 +79,12 @@ export class AuthMiddleware {
 }
 
 // Extend Express Request interface to include user info
+import { IAuthPayload } from '../../../../../interfaces/user.interface';
+
 declare global {
   namespace Express {
     interface Request {
-      user?: {
-        id: string;
-        username: string;
-      };
+      user?: IAuthPayload;
     }
   }
 }

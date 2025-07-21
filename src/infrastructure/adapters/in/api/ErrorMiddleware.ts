@@ -6,7 +6,7 @@ import {
   NotFoundError, 
   ValidationError,
   GameSessionError
-} from '../../../utils/ErrorHandler';
+} from '../../../../infrastructure/utils/ErrorTypes';
 
 /**
  * Error handling middleware for Express
