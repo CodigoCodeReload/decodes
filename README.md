@@ -2,52 +2,138 @@
 
 A precision-based game timer system where users try to stop a timer exactly 10 seconds after starting it.
 
-## System Architecture
+## Hexagonal Architecture
+
+This project implements the Hexagonal Architecture (Ports and Adapters) pattern to achieve a clean separation of concerns:
 
 ```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│                 │     │                 │     │                 │
-│  Authentication │     │  Game Session   │     │   Leaderboard   │
-│     Service     │◄────►     Service     │◄────►     Service     │
-│                 │     │                 │     │                 │
-└────────┬────────┘     └────────┬────────┘     └────────┬────────┘
-         │                       │                       │
-         │                       │                       │
-         ▼                       ▼                       ▼
 ┌─────────────────────────────────────────────────────────────────┐
+│                      REST API Controllers                       │
+└───────────────────────────────┬───────────────────────────────┬─┘
+                                │                               │
+                                ▼                               ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                        Input Ports (Use Cases)                  │
 │                                                                 │
-│                      In-Memory Data Store                       │
+│  ┌─────────────────┐     ┌─────────────────┐     ┌─────────────┐│
+│  │                 │     │                 │     │             ││
+│  │  Authentication │     │  Game Session   │     │ Leaderboard ││
+│  │     Service     │◄────►     Service     │◄────►   Service   ││
+│  │                 │     │                 │     │             ││
+│  └────────┬────────┘     └────────┬────────┘     └──────┬──────┘│
+└───────────┼────────────────────────┼────────────────────┼───────┘
+            │                        │                    │
+            ▼                        ▼                    ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                        Output Ports                             │
 │                                                                 │
+│  ┌─────────────────┐     ┌─────────────────┐     ┌─────────────┐│
+│  │                 │     │                 │     │             ││
+│  │     User        │     │  Game Session   │     │ Game Result ││
+│  │   Repository    │     │   Repository    │     │ Repository  ││
+│  │                 │     │                 │     │             ││
+│  └────────┬────────┘     └────────┬────────┘     └──────┬──────┘│
+└───────────┼────────────────────────┼────────────────────┼───────┘
+            │                        │                    │
+            ▼                        ▼                    ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      Infrastructure Adapters                    │
+│                                                                 │
+│                       In-Memory Data Store                      │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### Components
+### Hexagonal Architecture Layers
 
-1. **Authentication Service**:
-   - Handles user registration and login
-   - Issues JWT tokens for authenticated users
+1. **Domain Layer**:
+   - Core business entities: `User`, `GameSession`, `GameResult`, `LeaderboardEntry`
+   - Domain services: `GameService` for core game logic and scoring
+   - Pure business logic with no dependencies on external frameworks
 
-2. **Game Session Service**:
-   - Manages game sessions with start and stop functionality
-   - Calculates time deviation from the target (10 seconds)
-   - Awards points for accurate timing (±500ms)
+2. **Application Layer**:
+   - Input Ports (Use Cases):
+     - `AuthUseCase`: Authentication operations
+     - `GameUseCase`: Game session management
+     - `LeaderboardUseCase`: Leaderboard operations
+   - Output Ports (Repositories):
+     - `UserRepository`: User persistence operations
+     - `GameSessionRepository`: Game session persistence
+     - `GameResultRepository`: Game result persistence
+     - `TokenService`: Token generation and verification
+   - Application Services:
+     - `AuthService`: Implements authentication use cases
+     - `GameApplicationService`: Implements game use cases
+     - `LeaderboardService`: Implements leaderboard use cases
 
-3. **Leaderboard Service**:
-   - Ranks users based on average deviation
-   - Provides top 10 players with best timing accuracy
-
-4. **In-Memory Data Store**:
-   - Stores user data, game sessions, and results
-   - Provides fast access to game state
+3. **Infrastructure Layer**:
+   - Input Adapters:
+     - REST API Controllers for authentication, game, and leaderboard
+     - Middleware for authentication and authorization
+   - Output Adapters:
+     - In-memory repositories for users, sessions, and results
+     - JWT token service implementation
+   - Configuration:
+     - `AppConfig` for centralized configuration management
+   - Utilities:
+     - ID generation, error handling, validation
 
 ## Technical Stack
 
 - **Backend**: Node.js, TypeScript, Express
+- **Architecture**: Hexagonal (Ports and Adapters)
 - **Authentication**: JWT tokens
-- **Data Storage**: In-memory (Maps)
+- **Data Storage**: In-memory (Maps) - easily replaceable with database adapters
 - **API Documentation**: Postman collection (included)
 
 ## Setup Instructions
+
+1. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+2. **Create a .env file** in the project root with the following variables:
+   ```
+   PORT=3000
+   JWT_SECRET=your_jwt_secret_key
+   NODE_ENV=development
+   ```
+
+3. **Build the project**:
+   ```bash
+   npm run build
+   ```
+
+4. **Run the application**:
+   ```bash
+   npm start
+   ```
+   
+   Or for development with hot-reloading:
+   ```bash
+   npm run dev
+   ```
+
+## Project Structure
+
+```
+src/
+├── domain/                 # Domain layer (core business logic)
+│   ├── entities/           # Business entities
+│   └── services/           # Domain services
+├── application/            # Application layer
+│   ├── ports/              # Interfaces
+│   │   ├── in/             # Input ports (use cases)
+│   │   └── out/            # Output ports (repositories, services)
+│   └── services/           # Application services implementing use cases
+├── infrastructure/         # Infrastructure layer
+│   ├── adapters/           # Adapters implementing ports
+│   │   ├── in/             # Input adapters (controllers, API)
+│   │   └── out/            # Output adapters (repositories, services)
+│   ├── config/             # Configuration
+│   └── utils/              # Utilities
+└── index.ts                # Application entry point
+```
 
 ### Prerequisites
 
