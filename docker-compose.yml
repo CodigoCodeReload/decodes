@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  # Servicio principal de la aplicación
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pica-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      # Variables de entorno para la aplicación
+      - JWT_SECRET=your_jwt_secret_key_here
+      - JWT_EXPIRY=24h
+    volumes:
+      # Montaje para desarrollo (hot-reload)
+      - ./src:/app/src
+      - ./dist:/app/dist
+    depends_on:
+      - mongodb
+    networks:
+      - pica-network
+    command: >
+      sh -c "npm run dev"
+
+  # Base de datos MongoDB
+  mongodb:
+    image: mongo:latest
+    container_name: pica-mongodb
+    restart: unless-stopped
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password
+      - MONGO_INITDB_DATABASE=pica_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - pica-network
+
+networks:
+  pica-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+    driver: local
