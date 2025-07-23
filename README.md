@@ -1,450 +1,235 @@
-# Game Timer System
+# Pica Game Timer
 
-A precision-based game timer system where users try to stop a timer exactly 10 seconds after starting it.
+A precision timing game built with Node.js/TypeScript backend and vanilla JavaScript frontend. Players must stop a timer as close to exactly 10 seconds as possible to achieve the highest score.
 
-## Main Features
+## 🎯 Features
 
-- **Hexagonal Architecture**: Clear separation between domain, application, and infrastructure
-- **JWT Authentication**: Authentication system based on JWT tokens
-- **Unit Testing**: Test coverage for critical services and middleware
-- **Dockerization**: Complete configuration for development and deployment with Docker
+- **Precision Timer Game**: Stop the timer at exactly 10 seconds for maximum points
+- **JWT Authentication**: Secure user registration and login system
+- **Real-time Leaderboard**: Track top scores across all players
+- **Hexagonal Architecture**: Clean, maintainable backend architecture
+- **Docker Support**: Easy deployment with Docker Compose
+- **Hot Reload**: Development environment with automatic code reloading
 
-## Hexagonal Architecture
+## 🏗️ Architecture
 
-This project implements the Hexagonal Architecture (Ports and Adapters) pattern to achieve a clean separation of concerns:
+- **Backend**: Node.js with TypeScript, Express.js
+- **Frontend**: Vanilla JavaScript (no frameworks)
+- **Database**: MongoDB (via Docker)
+- **Authentication**: JWT tokens with bcrypt password hashing
+- **Architecture Pattern**: Hexagonal (Ports & Adapters)
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                      REST API Controllers                       │
-└───────────────────────────────┬───────────────────────────────┬─┘
-                                │                               │
-                                ▼                               ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                        Input Ports (Use Cases)                  │
-│                                                                 │
-│  ┌─────────────────┐     ┌─────────────────┐     ┌─────────────┐│
-│  │                 │     │                 │     │             ││
-│  │  Authentication │     │  Game Session   │     │ Leaderboard ││
-│  │     Service     │◄────►     Service     │◄────►   Service   ││
-│  │                 │     │                 │     │             ││
-│  └────────┬────────┘     └────────┬────────┘     └──────┬──────┘│
-└───────────┼────────────────────────┼────────────────────┼───────┘
-            │                        │                    │
-            ▼                        ▼                    ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                        Output Ports                             │
-│                                                                 │
-│  ┌─────────────────┐     ┌─────────────────┐     ┌─────────────┐│
-│  │                 │     │                 │     │             ││
-│  │     User        │     │  Game Session   │     │ Game Result ││
-│  │   Repository    │     │   Repository    │     │ Repository  ││
-│  │                 │     │                 │     │             ││
-│  └────────┬────────┘     └────────┬────────┘     └──────┬──────┘│
-└───────────┼────────────────────────┼────────────────────┼───────┘
-            │                        │                    │
-            ▼                        ▼                    ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                      Infrastructure Adapters                    │
-│                                                                 │
-│                       In-Memory Data Store                      │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### Hexagonal Architecture Layers
-
-1. **Domain Layer**:
-   - Core business entities: `User`, `GameSession`, `GameResult`, `LeaderboardEntry`
-   - Domain services: `GameService` for core game logic and scoring
-   - Pure business logic with no dependencies on external frameworks
-   - Implements the fundamental business rules of the system
-
-2. **Application Layer**:
-   - Use cases and application services: `AuthService`, `GameApplicationService`, `LeaderboardService`
-   - Orchestrates domain objects to fulfill business requirements
-   - Depends on the domain layer and ports (interfaces)
-   - Implements application logic while maintaining domain independence
-
-3. **Ports Layer**:
-   - Input ports (primary): Interfaces for use cases (what the application does)
-     - Examples: `TokenService`, controller interfaces
-   - Output ports (secondary): Interfaces for infrastructure services (what the application needs)
-     - Examples: Repository interfaces for `User`, `GameSession`, `GameResult`
-   - Defines clear contracts between different layers
-
-4. **Adapters Layer**:
-   - Primary adapters: REST controllers, API endpoints
-     - Examples: `ExpressAuthController`, `ExpressGameController`, `AuthMiddleware`
-   - Secondary adapters: Repositories, external services
-     - Examples: `InMemoryUserRepository`, `JwtTokenService`
-   - Implements port interfaces to connect with external systems
-   - Allows replacing implementations without affecting the application core
-
-5. **Infrastructure Layer**:
-   - Configuration, bootstrapping, dependency injection
-   - Framework-specific code (Express)
-   - Utilities:
-     - Error handling (`ErrorTypes`, `ErrorMiddleware`)
-     - Validation (`ValidationService`)
-     - Configuration (`AppConfig`)
-   - Provides technical services to the rest of the application
-
-## Unit Testing
-
-The project includes unit tests for critical components, following the principles of hexagonal architecture to ensure that each layer is tested in isolation.
-
-### Test Structure
-
-Tests are organized in the `src/__tests__` folder and follow a structure that reflects the hexagonal architecture:
-
-```
-src/
-└── __tests__/
-    ├── JwtTokenService.test.ts  # Tests for the JWT token adapter
-    ├── AuthMiddleware.test.ts    # Tests for the authentication middleware
-    └── types.ts                  # Shared types for tests
-```
-
-### Tested Components
-
-1. **JwtTokenService**
-   - Tests for `generateToken`: Verifies correct JWT token generation
-   - Tests for `generateSessionToken`: Verifies session token generation
-   - Tests for `verifyToken`: Verifies token validation and decoding
-
-2. **AuthMiddleware**
-   - Tests for `authenticate`: Verifies the authentication process with tokens
-   - Tests for `authorizeUser`: Verifies role and permission-based authorization
-
-### Running Tests
-
-To run unit tests:
-
-```bash
-npm test
-```
-
-To run tests with coverage:
-
-```bash
-npm run test:coverage
-```
-
-## Dockerization
-
-The project is fully dockerized to facilitate development and deployment, maintaining consistency across environments.
-
-### Docker Structure
-
-- **Dockerfile**: Defines the base image for the application
-- **docker-compose.yml**: Configures the necessary services (application and MongoDB)
-- **docker-start.sh/bat**: Scripts to easily start the containers
-
-### Configured Services
-
-1. **Application (app)**
-   - Based on Node.js 18 Alpine for reduced size
-   - Configured for development with hot-reload
-   - Exposes port 3000 for web access
-
-2. **Database (mongodb)**
-   - MongoDB for data persistence
-   - Volume to maintain data between restarts
-   - Initial database configuration
-
-### Environment Variables
-
-Environment variables are managed through the `.env` file (generated from `.env.example`):
-
-- JWT variables (secret, expiration time)
-- MongoDB configuration (URI, database name)
-- Server configuration (port, environment)
-
-### Networks and Volumes
-
-- `pica-network` network for communication between containers
-- `mongodb_data` volume for data persistence
-
-## Technical Stack
-
-### Core Technologies
-- **Backend**: Node.js, TypeScript, Express
-- **Architecture**: Hexagonal (Ports and Adapters)
-- **Authentication**: JWT tokens
-- **Data Storage**: In-memory (Maps) with MongoDB option
-
-### Development and Testing
-- **Testing**: Jest, ts-jest for unit testing
-- **Mocking**: Jest mocks to simulate external dependencies
-- **Validation**: Custom validation system
-
-### Infrastructure and Deployment
-- **Containers**: Docker, Docker Compose
-- **Database**: MongoDB (configured in Docker)
-- **Environment**: Configuration through environment variables
-
-### Documentation
-- **API**: Postman collection (included)
-- **Code**: Comments and TypeScript types
-- **Architecture**: Hexagonal architecture diagram
-
-## Setup Instructions
-
-1. **Install dependencies**:
-   ```bash
-   npm install
-   ```
-
-2. **Create a .env file** in the project root with the following variables:
-   ```
-   PORT=3000
-   JWT_SECRET=your_jwt_secret_key
-   NODE_ENV=development
-   ```
-
-3. **Build the project**:
-   ```bash
-   npm run build
-   ```
-
-4. **Run the application**:
-   ```bash
-   npm start
-   ```
-   
-   Or for development with hot-reloading:
-   ```bash
-   npm run dev
-   ```
-
-## Project Structure
-
-```
-src/
-├── domain/                 # Domain layer (core business logic)
-│   ├── entities/           # Business entities
-│   └── services/           # Domain services
-├── application/            # Application layer
-│   ├── ports/              # Interfaces
-│   │   ├── in/             # Input ports (use cases)
-│   │   └── out/            # Output ports (repositories, services)
-│   └── services/           # Application services implementing use cases
-├── infrastructure/         # Infrastructure layer
-│   ├── adapters/           # Adapters implementing ports
-│   │   ├── in/             # Input adapters (controllers, API)
-│   │   └── out/            # Output adapters (repositories, services)
-│   ├── config/             # Configuration
-│   └── utils/              # Utilities
-└── index.ts                # Application entry point
-```
+## 🚀 Quick Start with Docker
 
 ### Prerequisites
 
-- Node.js (v14 or higher) and npm (v6 or higher) **OR**
-- Docker and Docker Compose (for containerized setup)
+- Docker Desktop installed and running
+- Git
 
 ### Installation
 
-#### Option 1: Standard Installation
-
-1. Clone the repository:
+1. **Clone the repository**
    ```bash
    git clone <repository-url>
    cd pica
    ```
 
-2. Install dependencies:
+2. **Start the application**
+   ```bash
+   docker compose up
+   ```
+
+3. **Access the application**
+   - Open your browser and navigate to: `http://localhost:3000`
+   - The application will be ready to use!
+
+### What Docker Compose includes:
+
+- **Application Server**: Node.js backend with hot-reload
+- **MongoDB Database**: Persistent data storage
+- **Automatic Dependencies**: All npm packages installed automatically
+- **Development Environment**: Configured for easy development
+
+## 🎮 How to Play
+
+1. **Register/Login**: Create an account or login with existing credentials
+2. **Start Timer**: Click "Start Game" to begin the 10-second challenge
+3. **Stop Timer**: Click "Stop Game" as close to 10.00 seconds as possible
+4. **View Score**: Your precision score will be calculated and displayed
+5. **Check Leaderboard**: See how you rank against other players
+
+## 🛠️ Development
+
+### Local Development (without Docker)
+
+If you prefer to run locally without Docker:
+
+1. **Install dependencies**
    ```bash
    npm install
    ```
 
-3. Create a `.env` file in the root directory with the following content:
-   ```
-   JWT_SECRET=your_secret_key
-   PORT=3000
-   ```
-
-4. Build the application:
+2. **Create environment file**
    ```bash
-   npm run build
+   # Copy the example environment file
+   cp .env.example .env
+   ```
+   
+   Then edit the `.env` file with your configuration:
+   ```env
+   # Server Configuration
+   NODE_ENV=development
+   PORT=3001
+   
+   # JWT Configuration
+   JWT_SECRET=supersecret
+   JWT_EXPIRY=24h
+   JWT_SESSION_EXPIRY=1h
+   
+   # MongoDB Configuration (if using local MongoDB)
+   MONGO_URI=mongodb://localhost:27017/pica_db
+   MONGO_DB_NAME=pica_db
+   
+   # Application Configuration
+   APP_NAME=Pica Game Timer
+   APP_URL=http://localhost:3001
    ```
 
-5. Start the server:
+   **Alternative: Set environment variables manually**
    ```bash
-   npm start
+   # Windows
+   set JWT_SECRET=supersecret
+   set PORT=3001
+
+   # Linux/Mac
+   export JWT_SECRET=supersecret
+   export PORT=3001
    ```
 
-   For development with hot reload:
+3. **Start development server**
    ```bash
    npm run dev
    ```
 
-#### Option 2: Docker Installation
+4. **Access the application**
+   - Open: `http://localhost:3001`
 
-1. Clone the repository:
-   ```bash
-   git clone <repository-url>
-   cd pica
-   ```
+### Project Structure
 
-2. Start the application using Docker Compose:
-   
-   **On Windows:**
-   ```bash
-   docker-start.bat
-   ```
-   
-   **On Linux/Mac:**
-   ```bash
-   chmod +x docker-start.sh
-   ./docker-start.sh
-   ```
+```
+src/
+├── application/           # Business logic layer
+│   ├── ports/            # Interface definitions
+│   └── services/         # Application services
+├── domain/               # Domain entities and logic
+├── infrastructure/       # External adapters
+│   ├── adapters/         # Database, API adapters
+│   └── Application.ts    # Express app configuration
+├── interfaces/           # TypeScript interfaces
+└── types/               # Type definitions
 
-   This will:
-   - Create a `.env` file if it doesn't exist
-   - Build and start the application container
-   - Start a MongoDB container for data persistence
-   - Connect the containers via a Docker network
+public/                   # Frontend static files
+├── js/                  # JavaScript modules
+│   ├── auth.js          # Authentication logic
+│   ├── game.js          # Game timer logic
+│   ├── leaderboard.js   # Leaderboard display
+│   └── api.js           # API communication
+├── css/                 # Stylesheets
+└── index.html           # Main HTML file
+```
 
-3. Access the application at http://localhost:3000
+## 🔧 Configuration
 
-4. To stop the containers:
-   ```bash
-   docker-compose down
-   ```
+### Environment Variables
 
-## API Endpoints
+The application uses environment variables for configuration. For local development, create a `.env` file:
+
+```bash
+# Copy the example file
+cp .env.example .env
+```
+
+**Required Environment Variables:**
+
+- `JWT_SECRET`: Secret key for JWT token signing (default: "supersecret")
+- `JWT_EXPIRY`: Token expiration time (default: "24h")
+- `JWT_SESSION_EXPIRY`: Session token expiration (default: "1h")
+- `PORT`: Server port (default: 3000 in Docker, 3001 locally)
+- `NODE_ENV`: Environment mode (development/production)
+- `MONGO_URI`: MongoDB connection string
+- `MONGO_DB_NAME`: Database name (default: "pica_db")
+- `APP_NAME`: Application name for display
+- `APP_URL`: Base URL for the application
+
+**⚠️ Security Note:** Never commit your `.env` file to version control. The `.env.example` file is provided as a template.
+
+### Docker Configuration
+
+The `docker-compose.yml` includes:
+- Application service with hot-reload
+- MongoDB service with persistent storage
+- Network configuration for service communication
+- Volume mounts for development
+
+## 🏆 Scoring System
+
+- **Perfect Score (10.00s)**: Maximum points
+- **Close Timing**: Points decrease based on deviation from 10.00s
+- **Leaderboard**: Tracks best scores across all players
+- **User History**: Each user can see their game attempts
+
+## 🔐 Security Features
+
+- **Password Hashing**: bcrypt with salt rounds
+- **JWT Authentication**: Secure token-based auth
+- **Protected Routes**: API endpoints require valid tokens
+- **Input Validation**: Server-side request validation
+
+## 🚦 API Endpoints
 
 ### Authentication
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/login` - User login
 
-- **Register a new user**:
-  ```
-  POST /auth/register
-  Body: { "username": "user1" }
-  ```
-
-- **Login**:
-  ```
-  POST /auth/login
-  Body: { "username": "user1" }
-  ```
-
-### Game Sessions
-
-- **Start a game timer**:
-  ```
-  POST /games/:userId/start
-  Headers: Authorization: Bearer <token>
-  ```
-
-- **Stop a game timer**:
-  ```
-  POST /games/:userId/stop
-  Headers: Authorization: Bearer <token>
-  ```
-
-- **Get user's game history**:
-  ```
-  GET /games/:userId
-  Headers: Authorization: Bearer <token>
-  ```
+### Game
+- `POST /api/game/start` - Start game timer (requires auth)
+- `POST /api/game/stop` - Stop game timer (requires auth)
 
 ### Leaderboard
+- `GET /api/leaderboard` - Get top scores (requires auth)
 
-- **Get top 10 players**:
-  ```
-  GET /leaderboard
-  ```
+## 🐛 Troubleshooting
 
-- **Get detailed leaderboard with pagination**:
-  ```
-  GET /leaderboard/detailed?limit=10&offset=0
-  Headers: Authorization: Bearer <token>
-  ```
+### Docker Issues
 
-## Game Logic
+1. **Port conflicts**: Make sure ports 3000 and 27017 are available
+2. **Docker not running**: Ensure Docker Desktop is started
+3. **Build failures**: Try `docker compose down` then `docker compose up --build`
 
-1. **Objective**: Stop the timer as close as possible to 10 seconds after starting it.
-2. **Scoring**:
-   - If the user stops within 10 seconds ±500ms (9.5-10.5 seconds), they get 1 point.
-   - The leaderboard ranks users by their average deviation from 10 seconds.
-3. **Session Management**:
-   - Game sessions expire after 30 minutes.
-   - Each user can have only one active game session at a time.
+### Authentication Issues
 
-## Implemented Improvements and Future Plan
+1. **401 Unauthorized**: Clear browser localStorage and login again
+2. **Token expired**: Login again to get a fresh token
+3. **CORS errors**: Check that frontend and backend ports match
 
-### Already Implemented Improvements
+### Development Issues
 
-1. **Hexagonal Architecture**:
-   - Clear separation between domain, application, and infrastructure
-   - Well-defined interfaces between layers (ports)
-   - Interchangeable implementations (adapters)
+1. **Hot reload not working**: Check volume mounts in docker-compose.yml
+2. **TypeScript errors**: Ensure all dependencies are installed
+3. **Database connection**: Verify MongoDB container is running
 
-2. **Enhanced JWT Authentication**:
-   - Fixed type errors in token generation and verification
-   - Unified JWT payload handling using `sub` for user ID
-   - Correct implementation of the `TokenService` interface
+## 📝 License
 
-3. **Unit Testing**:
-   - Tests for `JwtTokenService` (token generation and verification)
-   - Tests for `AuthMiddleware` (authentication and authorization)
-   - Jest configuration with TypeScript
+This project is licensed under the MIT License.
 
-4. **Dockerization**:
-   - Docker and Docker Compose configuration
-   - MongoDB integration for persistence
-   - Startup scripts to facilitate deployment
+## 🤝 Contributing
 
-### Scalability Plan (10,000+ Users)
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
 
-1. **Data Persistence**:
-   - Implement adapters for MongoDB (already configured in Docker)
-   - Consider Redis for caching and session management
-   - Design efficient indexes for frequent queries
+---
 
-2. **Horizontal Scaling**:
-   - Deploy multiple instances behind a load balancer
-   - Leverage hexagonal architecture to facilitate distribution
-   - Implement stateless authentication to allow request distribution
-
-3. **Performance Optimization**:
-   - Implement caching for leaderboard results
-   - Optimize database queries
-   - Consider pagination strategies for large datasets
-
-### Priority Next Steps
-
-1. **Test Expansion**:
-   - Add integration tests for complete flows
-   - Increase unit test coverage
-   - Implement e2e tests to validate user flows
-
-2. **Security Improvements**:
-   - Implement robust input validation
-   - Add CSRF protection and rate limiting
-   - Consider refresh tokens to enhance security
-
-3. **Observability**:
-   - Implement structured logging
-   - Add metrics for health monitoring
-   - Configure alerts for system anomalies
-
-4. **CI/CD**:
-   - Configure continuous integration pipeline
-   - Automate testing and deployment
-   - Implement static code analysis
-
-## Testing with Postman
-
-A Postman collection is included in the `postman` directory. Import this collection to test all API endpoints.
-
-The collection includes:
-- Authentication flow
-- Game session management
-- Leaderboard retrieval
-- Edge case testing
-
-## License
-
-Dante Panella
-panella.dante@gmail.com
+**Ready to test your timing skills? Start the game and see if you can hit exactly 10.00 seconds!** ⏱️

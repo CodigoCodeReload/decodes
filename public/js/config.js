@@ -6,17 +6,17 @@ const Config = {
   // API endpoints
   api: {
     auth: {
-      register: '/auth/register',
-      login: '/auth/login'
+      register: '/api/auth/register',
+      login: '/api/auth/login'
     },
     game: {
-      start: (userId) => `/games/${userId}/start`,
-      stop: (userId) => `/games/${userId}/stop`,
-      results: (userId) => `/games/${userId}`
+      start: '/api/game/start',
+      stop: '/api/game/stop',
+      results: (userId) => `/api/game/results/${userId}`
     },
     leaderboard: {
-      top: '/leaderboard',
-      detailed: '/leaderboard/detailed'
+      top: '/api/leaderboard',
+      detailed: '/api/leaderboard/detailed'
     }
   },
   

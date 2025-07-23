@@ -61,14 +61,37 @@ export class AuthService implements AuthUseCase {
    * @returns Decoded token payload if valid
    */
   async verifyToken(token: string): Promise<{ userId: string; username: string } | null> {
-    const payload = this.tokenService.verifyToken(token);
-    if (!payload || !payload.userId || !payload.username) {
+    try {
+      console.log('🔍 AuthService: Verifying token...');
+      const payload = this.tokenService.verifyToken(token);
+      console.log('🔍 Token payload:', payload);
+      
+      if (!payload) {
+        console.log('❌ AuthService: No payload returned');
+        return null;
+      }
+      
+      if (!payload.userId && !payload.sub) {
+        console.log('❌ AuthService: No userId or sub in payload');
+        return null;
+      }
+      
+      if (!payload.username) {
+        console.log('❌ AuthService: No username in payload');
+        return null;
+      }
+
+      // Handle both 'userId' and 'sub' fields (JWT standard uses 'sub')
+      const userId = payload.userId || payload.sub;
+      
+      console.log('✅ AuthService: Token valid for user:', userId);
+      return {
+        userId,
+        username: payload.username
+      };
+    } catch (error) {
+      console.log('❌ AuthService: Token verification error:', error instanceof Error ? error.message : 'Unknown error');
       return null;
     }
-
-    return {
-      userId: payload.userId,
-      username: payload.username
-    };
   }
 }

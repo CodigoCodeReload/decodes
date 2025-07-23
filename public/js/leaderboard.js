@@ -9,7 +9,10 @@ class LeaderboardService {
    * @returns {Promise<object>} - Leaderboard data
    */
   static async getLeaderboard() {
-    return ApiService.get(Config.api.leaderboard.top);
+    if (!AuthService.isAuthenticated()) {
+      throw new Error('Authentication required');
+    }
+    return ApiService.get(Config.api.leaderboard.top, true);
   }
   
   /**

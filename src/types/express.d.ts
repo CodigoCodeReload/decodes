@@ -1,5 +1,3 @@
-import { Express } from 'express';
-
 /**
  * Extend Express Request interface to include user property
  */
@@ -13,3 +11,5 @@ declare global {
     }
   }
 }
+
+export {};

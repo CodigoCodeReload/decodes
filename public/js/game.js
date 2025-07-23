@@ -19,8 +19,7 @@ class GameService {
       throw new Error('Authentication required');
     }
     
-    const userId = AuthService.getUserId();
-    const result = await ApiService.post(Config.api.game.start(userId), {}, true);
+    const result = await ApiService.post(Config.api.game.start, {}, true);
     
     // Start the client-side timer
     this.startTime = Date.now();
@@ -42,8 +41,7 @@ class GameService {
       throw new Error('No active game session');
     }
     
-    const userId = AuthService.getUserId();
-    const result = await ApiService.post(Config.api.game.stop(userId), {}, true);
+    const result = await ApiService.post(Config.api.game.stop, {}, true);
     
     // Stop the client-side timer
     this.isRunning = false;
